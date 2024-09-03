@@ -8,6 +8,7 @@ const RoomPage = () => {
   const [remoteSocketId, setRemoteSocketId] = useState(null);
   const [myStream, setMyStream] = useState();
   const [remoteStream, setRemoteStream] = useState();
+  const [transcript, setTranscript] = useState("");
 
   const handleUserJoined = useCallback(({ email, id }) => {
     console.log(`Email ${email} joined room`);
@@ -109,6 +110,29 @@ const RoomPage = () => {
     handleNegoNeedFinal,
   ]);
 
+  // Initialize Speech Recognition
+  useEffect(() => {
+    const SpeechRecognition =
+      window.SpeechRecognition || window.webkitSpeechRecognition;
+    const recognition = new SpeechRecognition();
+
+    recognition.continuous = true;
+    recognition.interimResults = true;
+
+    recognition.onresult = (event) => {
+      const currentTranscript = Array.from(event.results)
+        .map((result) => result[0].transcript)
+        .join("");
+      setTranscript(currentTranscript);
+    };
+
+    recognition.start();
+
+    return () => {
+      recognition.stop();
+    };
+  }, [transcript]);
+
   return (
     <div>
       <h1>Room Page</h1>
@@ -138,6 +162,12 @@ const RoomPage = () => {
             url={remoteStream}
           />
         </>
+      )}
+      {transcript && (
+        <div>
+          <h2>Transcribed Speech:</h2>
+          <p>{transcript}</p>
+        </div>
       )}
     </div>
   );
