@@ -5,9 +5,32 @@ import { useSocket } from "../context/SocketProvider";
 const LobbyScreen = () => {
   const [email, setEmail] = useState("");
   const [room, setRoom] = useState("");
+  const [transcript, setTranscript] = useState("");
 
   const socket = useSocket();
   const navigate = useNavigate();
+
+  // Speech recognition setup
+  useEffect(() => {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    const recognition = new SpeechRecognition();
+
+    recognition.continuous = true;
+    recognition.interimResults = true;
+
+    recognition.onresult = (event) => {
+      const currentTranscript = Array.from(event.results)
+        .map((result) => result[0].transcript)
+        .join("");
+      setTranscript(currentTranscript);
+    };
+
+    recognition.start();
+
+    return () => {
+      recognition.stop();
+    };
+  }, []);
 
   const handleSubmitForm = useCallback(
     (e) => {
@@ -54,6 +77,10 @@ const LobbyScreen = () => {
         <br />
         <button>Join</button>
       </form>
+      <div>
+        <h2>Speech-to-Text Output:</h2>
+        <p>This is caption: {transcript}</p>
+      </div>
     </div>
   );
 };
